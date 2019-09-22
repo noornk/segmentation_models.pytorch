@@ -43,27 +43,30 @@ class Epoch:
 
         with tqdm(dataloader, desc=self.stage_name, file=sys.stdout, disable=not (self.verbose)) as iterator:
             for x, y in iterator:
-                unique, counts = np.unique(y, return_counts=True)
-                if len(dict(zip(unique, counts))) > 1:
-                    x, y = x.to(self.device), y.to(self.device)
-                    loss, y_pred = self.batch_update(x, y)
+                for j in range(len(x)):
+                    x = x[j].float()
+                    y = y[j].float()
+                    unique, counts = np.unique(y, return_counts=True)
+                    if len(dict(zip(unique, counts))) > 1:
+                        x, y = x.to(self.device), y.to(self.device)
+                        loss, y_pred = self.batch_update(x, y)
 
-                    # update loss logs
-                    loss_value = loss.cpu().detach().numpy()
-                    loss_meter.add(loss_value)
-                    loss_logs = {self.loss.__name__: loss_meter.mean}
-                    logs.update(loss_logs)
+                        # update loss logs
+                        loss_value = loss.cpu().detach().numpy()
+                        loss_meter.add(loss_value)
+                        loss_logs = {self.loss.__name__: loss_meter.mean}
+                        logs.update(loss_logs)
 
-                    # update metrics logs
-                    for metric_fn in self.metrics:
-                        metric_value = metric_fn(y_pred, y).cpu().detach().numpy()
-                        metrics_meters[metric_fn.__name__].add(metric_value)
-                    metrics_logs = {k: v.mean for k, v in metrics_meters.items()}
-                    logs.update(metrics_logs)
+                        # update metrics logs
+                        for metric_fn in self.metrics:
+                            metric_value = metric_fn(y_pred, y).cpu().detach().numpy()
+                            metrics_meters[metric_fn.__name__].add(metric_value)
+                        metrics_logs = {k: v.mean for k, v in metrics_meters.items()}
+                        logs.update(metrics_logs)
 
-                    if self.verbose:
-                        s = self._format_logs(logs)
-                        iterator.set_postfix_str(s)
+                        if self.verbose:
+                            s = self._format_logs(logs)
+                            iterator.set_postfix_str(s)
 
         return logs
 
