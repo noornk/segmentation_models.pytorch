@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 import torch
 from tqdm import tqdm as tqdm
 from .meter import AverageValueMeter
